@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "neopixel_control.h"
 
 
 
@@ -25,7 +25,7 @@
 // CONFIG2
 #pragma config MCLRE = ON       // Master Clear Enable bit (MCLR/VPP pin function is MCLR; Weak pull-up enabled )
 #pragma config PWRTE = OFF      // Power-up Timer Enable bit (PWRT disabled)
-#pragma config WDTE = ON       // Watchdog Timer Enable bits (WDT disabled; SWDTEN is ignored)
+#pragma config WDTE = OFF       // Watchdog Timer Enable bits (WDT disabled; SWDTEN is ignored)
 #pragma config LPBOREN = OFF    // Low-power BOR enable bit (ULPBOR disabled)
 #pragma config BOREN = OFF      // Brown-out Reset Enable bits (Brown-out Reset disabled)
 #pragma config BORV = LOW       // Brown-out Reset Voltage selection bit (Brown-out voltage (Vbor) set to 2.45V)
@@ -58,9 +58,8 @@ uint8_t PR_val[] = {127, 107, 91, 78, 66, 56, 48, 40}; // PR2 values for frequen
 // Index into sine table
 uint8_t index = 0;
 uint8_t state = 0; //is the board being addressed by the controller
-uint8_t grb_colors[] = {127, 127, 127}; //green, red, blue for neopixel control
-uint8_t color_changed = 0; //has the color changed
-uint8_t color = 0; //0-255
+
+uint8_t color = 0;
 
 void init_ccp_cwg(void) {
     // Set PA0, PA1 Pin as output
@@ -147,38 +146,6 @@ void UART_Write(uint8_t data) {
     
 }
 
-void send_bit(uint8_t bit) {
-    if (bit) {
-        // Send logic "1"
-        LATA4 = 1;  // High
-        __delay_us(0.8);     // 0.8 µs
-        LATA4 = 0;  // Low
-        __delay_us(0.45);    // 0.45 µs
-    } else {
-        // Send logic "0"
-        LATA4 = 1;  // High
-        __delay_us(0.4);     // 0.4 µs
-        LATA4 = 0;  // Low
-        __delay_us(0.85);    // 0.85 µs
-    }
-}
-
-void send_byte(uint8_t byte) {
-    for (int i = 7; i >= 0; i--) {
-        send_bit((byte >> i) & 0x01);  // Send each bit, MSB first
-    }
-}
-
-void send_grb(uint8_t green, uint8_t red, uint8_t blue) {
-    // Send the GRB color data
-    send_byte(green);  // Send Green byte
-    send_byte(red);    // Send Red byte
-    send_byte(blue);   // Send Blue byte
-
-    // Reset time (hold data line low for at least 50 µs)
-    __delay_us(60);  // 60 µs to ensure reset
-}
-
 // Timer2 Interrupt Service Routine
 void __interrupt() ISR(void) {
         if (RCIF) {
@@ -197,16 +164,13 @@ void __interrupt() ISR(void) {
                     return;
                 }
                 else{ //the current addr
-                    // LATA4 = start & 0b1; //LED on/off
-                    state = start;
+//                    LATA4 = start & 0b1; //LED on/off
+                    state = start; 
                     if(start == 0){
                         TMR2ON = 0;//ccp enable 
                         TRISA0 = 1;
                         TRISA1 = 1;
-                        grb_colors[0] = 0;
-                        grb_colors[1] = 0;
-                        grb_colors[2] = 0;
-                        color_changed = 1;
+                        duty_index = 0;
                     }
                     return;
                 }
@@ -226,11 +190,6 @@ void __interrupt() ISR(void) {
                     T2CON = 0b00000110;
                     freq_index = (buffer & 0b111);
                     duty_index = (buffer & 0b1111000) >> 3;
-                    color = duty_index; //map to 0-255;
-                    grb_colors[0] = duty_index;
-                    grb_colors[1] = duty_index;
-                    grb_colors[2] = duty_index;
-                    color_changed = 1;
                     if(duty_index == 0){
                         CWG1CON0bits.EN = 0;
                         CWG1CON1bits.POLB = 1;
@@ -278,20 +237,35 @@ void __interrupt() ISR(void) {
 int main(int argc, char** argv) {
 
     // Initialize CCP Module
-    TRISA4 = 0;
-    WDTCON = 0b100011;
+//    TRISA4 = 0;
+//    WDTCON = 0b100011;
     init_ccp_cwg();
     usart_init();
-    send_grb(grb_colors[0], grb_colors[1], grb_colors[2]);
+    SPI_Init();
    
     // Infinite loop
     while(1) {
-        if (color_changed == 1){
-            send_grb(grb_colors[0], grb_colors[1], grb_colors[2]);
-            color_changed = 0;
+        if (color != duty_index){
+            color = duty_index;
+            sendColor_SPI(color*16, 0, 0);
         }
-        // Main loop does nothing but clear the watchdog timer, all work is done in ISR
-        CLRWDT();
+         __delay_ms(1);
+        // Example: Set LED to Green
+//        sendColor_SPI(0x1F, 0x00, 0x00); // G=0xFF, R=0, B=0
+//        __delay_ms(1000);
+//        
+//        // Red
+//        sendColor_SPI(0x00, 0x1F, 0x00);
+//        __delay_ms(1000);
+//
+//        // Blue
+//        sendColor_SPI(0x00, 0x00, 0x1F);
+//        __delay_ms(1000);
+//
+//        // Off
+//        sendColor_SPI(0x00, 0x00, 0x00);
+//        __delay_ms(1000);
+//        CLRWDT();
     }
     
 }

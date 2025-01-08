@@ -13,8 +13,8 @@ void SPI_Init(void)
     // or SSP1ADD=3 => 2.0 MHz.  Either can work.
 
     SSP1ADD  = 2;        // This yields ~2.67 MHz (a bit above 2.4, typically still OK)
-    SSP1CON1 = 0x2A;     // SSPEN=1 (enable), CKP=0 (Idle low), SSPM=b1010 (Master Fosc/(4*(SSPxADD+1)))
-    SSP1STAT = 0x40;     // CKE=1 (transmit on active->idle)
+    SSP1CON1 = 0b00101010;     // SSPEN=1 (enable), CKP=0 (Idle low), SSPM=b1010 (Master Fosc/(4*(SSPxADD+1)))
+    SSP1STAT = 0b00000000;     // CKE=1 (transmit on active->idle)
     
     // TRIS setup: SDO is output
     // On PIC16F18313, check datasheet for pin assignment
@@ -73,19 +73,16 @@ void sendColor_SPI(uint8_t g, uint8_t r, uint8_t b)
     {
         SSP1BUF = gEnc[i];
         while(!SSP1STATbits.BF);  // Wait
-        (void)SSP1BUF;           // Clear BF
     }
     for(uint8_t i = 0; i < 4; i++)
     {
         SSP1BUF = rEnc[i];
-        while(!SSP1STATbits.BF);
-        (void)SSP1BUF;
+        while(!SSP1STATbits.BF);  // Wait
     }
     for(uint8_t i = 0; i < 4; i++)
     {
         SSP1BUF = bEnc[i];
-        while(!SSP1STATbits.BF);
-        (void)SSP1BUF;
+        while(!SSP1STATbits.BF);  // Wait
     }
 
     // After finishing all bytes, we do a latch/reset by holding line low ~50us.
