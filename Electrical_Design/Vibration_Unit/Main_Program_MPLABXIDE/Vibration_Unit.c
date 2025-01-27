@@ -51,9 +51,12 @@
 uint8_t buffer = 0;//uart recv buffer
 
 uint8_t duty_index = 7; // 0-15 maps to PWM duty cycle 0-100%;
+uint8_t duty_cycle_array[] = {0,1,2,3,5,6,9,12,16,21,27,35,46,59,77,99};
+uint8_t duty_cycle = duty_cycle_array[duty_index];
 uint8_t freq_index = 3; // 0-7 maps to frequency {123, 145, 170, 200, 235, 275, 322, 384} Hz;
 
 uint8_t PR_val[] = {127, 107, 91, 78, 66, 56, 48, 40}; // PR2 values for frequencies;
+// TODO: recalculate and test PR2 values for new duty cycles 32->200.
 
 // Index into sine table
 uint8_t index = 0;
@@ -171,6 +174,7 @@ void __interrupt() ISR(void) {
                         TRISA0 = 1;
                         TRISA1 = 1;
                         duty_index = 0;
+                        duty_cycle = duty_cycle_array[duty_index];
                     }
                     return;
                 }
@@ -190,7 +194,8 @@ void __interrupt() ISR(void) {
                     T2CON = 0b00000110;
                     freq_index = (buffer & 0b111);
                     duty_index = (buffer & 0b1111000) >> 3;
-                    if(duty_index == 0){
+                    duty_cycle = duty_cycle_array[duty_index];
+                    if(duty_cycle == 0){
                         CWG1CON0bits.EN = 0;
                         CWG1CON1bits.POLB = 1;
                         CWG1CON0bits.EN = 1;
@@ -208,19 +213,19 @@ void __interrupt() ISR(void) {
             // Update Duty Cycle
             CCP1IF = 0; //clear flag
             TMR2IF = 0;
-            index = (index + 1) % 32;
-            if(duty_index != 0){
-                if((index == 0) || (index == 16)){
+            index = (index + 1) % 200;
+            if(duty_cycle != 0){
+                if((index == 0) || (index == 100)){
                     CWG1CON0bits.EN = 0;
                     CWG1CON1bits.POLB= 0;
                     CWG1CON0bits.EN = 1;
                 }
-                else if(index == duty_index || index == (duty_index + 16)){
+                else if(index == duty_cycle || index == (duty_cycle + 100)){
                     CWG1CON0bits.EN = 0;
                     CWG1CON1bits.POLB = 1;
                     CWG1CON0bits.EN = 1;
                 }
-                if(index < duty_index)
+                if(index < duty_cycle)
                 {
                     CCPR1H = (PR_val[freq_index]);
                     CCPR1L= 0x00;
