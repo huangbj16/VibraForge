@@ -49,6 +49,8 @@
 #define _XTAL_FREQ  32000000     // Set clock frequency 
 
 uint8_t buffer = 0;//uart recv buffer
+uint8_t parity = 0;//uart recv parity
+uint8_t uart_recv_flag = 0;
 
 uint8_t duty_index = 0; // 0-15 maps to PWM duty cycle 0-100%;
 uint8_t duty_cycle_array[] = {0,1,2,3,5,6,9,12,16,21,27,35,46,59,77,99};
@@ -58,10 +60,14 @@ uint8_t freq_index = 3; // 0-7 maps to frequency {123, 145, 170, 200, 235, 275, 
 //uint8_t PR_val[] = {127, 107, 91, 78, 66, 56, 48, 40}; // PR2 values for frequencies;
 uint8_t PR_val[] = {85, 72, 60, 52, 44, 37, 32, 27}; // PR2 values for frequencies;
 
+uint8_t ccp_flag = 0;
+uint8_t cwg_flag = 0;
+uint8_t duty_flag = 0;
 // Index into sine table
 uint8_t index = 0;
 uint8_t state = 0; //is the board being addressed by the controller
 
+// neopixel color
 uint8_t color = 0;
 
 void init_ccp_cwg(void) {
@@ -76,7 +82,7 @@ void init_ccp_cwg(void) {
     // Set CCP1CON register to PWM mode
     CCP1CON = 0b10011111;//FMT = 1
     CCP1IE = 1;
-    CCP1IF = 1;
+    // CCP1IF = 1;
     // Enable Global Interrupts
     GIE = 1;
     
@@ -149,114 +155,103 @@ void UART_Write(uint8_t data) {
     
 }
 
+void UART_processing(){
+    if(getParity(buffer) != parity) return; //drop packet 
+    if((buffer >> 7) != 0b1){ //addr byte recved
+        uint8_t addr = (buffer >> 1); //get addr
+        uint8_t start = (buffer & 0b1); //get start/stop
+        if(addr != 0){ //not the current address
+            state = 0;// if state = 1 but the byte after is not data byte, then the unit should reset, to let commands go through.
+            --addr; //decrease addr
+            UART_Write(make_addr_byte(start, addr)); //send
+            return;
+        }
+        else{ //the current addr
+            state = start; 
+            if(start == 0){
+                TMR2ON = 0;//ccp enable 
+                TRISA0 = 1;
+                TRISA1 = 1;
+                duty_index = 0;
+            }
+            return;
+        }
+    
+    }
+    else { //data byte received
+        if(state == 0){ //previous data byte not address to this board
+                while(!TRMT){};
+                TX9D = parity & 0b1;
+                TX1REG = buffer;//transmit directly
+                return;
+        }
+        else{ //data byte addressed to this board
+            TRISA1 = 0;
+            TRISA0 = 0;
+            T2CON = 0b00000101;
+            freq_index = (buffer & 0b111);
+            duty_index = (buffer & 0b1111000) >> 3;
+            duty_cycle = duty_cycle_array[duty_index];
+            PR2 = PR_val[freq_index]; //load freq
+            state = 0;//state flipped to 0 again
+            return;
+        }
+    }
+}
+
+void CCP_processing(){
+    // update CWG and CCP statuses based on the current index
+    if((index >= 0 && index < duty_cycle) || (index >= 100 && index < (duty_cycle + 100))){
+        if (cwg_flag == 0){
+            // keep RA0 and RA1 the opposite
+            CWG1CON0bits.EN = 0;
+            CWG1CON1bits.POLB= 0;
+            CWG1CON0bits.EN = 1;
+            cwg_flag = 1;
+        }
+    }
+    else{
+        if (cwg_flag == 1){
+            // keep RA0 and RA1 the same
+            CWG1CON0bits.EN = 0;
+            CWG1CON1bits.POLB = 1;
+            CWG1CON0bits.EN = 1;
+            cwg_flag = 0;
+        }
+    }
+    if(index >= 0 && index < duty_cycle){
+        if (duty_flag == 0){
+            // full duty cycle
+            CCPR1H = PR_val[freq_index];
+            CCPR1L= 0x00;
+            duty_flag = 1;
+        }
+    }
+    else{
+        if (duty_flag == 1){
+            // near-zero duty cycle
+            CCPR1H = 0x00;
+            CCPR1L= 64;
+            duty_flag = 0;
+        }
+    }
+}
+
 // Timer2 Interrupt Service Routine
 void __interrupt() ISR(void) {
         if (RCIF) {
             RCIF = 0; // Clear The Flag
-            uint8_t parity = RX9D; //read the 9th parity
+            parity = RX9D; //read the 9th parity
             buffer = RC1REG; // Read The Received Data Buffer
-            if(getParity(buffer) != parity) return; //drop packet 
-            
-            if((buffer >> 7) != 0b1){ //addr byte recved
-                uint8_t addr = (buffer >> 1); //get addr
-                uint8_t start = (buffer & 0b1); //get start/stop
-                if(addr != 0){ //not the current address
-                    state = 0;// if state = 1 but the byte after is not data byte, then the unit should reset, to let commands go through.
-                    --addr; //decrease addr
-                    UART_Write(make_addr_byte(start, addr)); //send
-                    return;
-                }
-                else{ //the current addr
-//                    LATA4 = start & 0b1; //LED on/off
-                    state = start; 
-                    if(start == 0){
-                        TMR2ON = 0;//ccp enable 
-                        TRISA0 = 1;
-                        TRISA1 = 1;
-                        duty_index = 0;
-//                        duty_cycle = duty_cycle_array[duty_index];
-                    }
-                    return;
-                }
-            
-            }
-            else { //data byte received
-                if(state == 0){ //previous data byte not address to this board
-                      while(!TRMT){};
-                      TX9D = parity & 0b1;
-                      TX1REG = buffer;//transmit directly
-                      return;
-                }
-                else{ //data byte addressed to this board
-                    TRISA1 = 0;
-                    TRISA0 = 0;
-                    T2CON = 0b00000101;
-                    freq_index = (buffer & 0b111);
-                    duty_index = (buffer & 0b1111000) >> 3;
-                    duty_cycle = duty_cycle_array[duty_index];
-//                    if(duty_cycle == 0){
-//                        CWG1CON0bits.EN = 0;
-//                        CWG1CON1bits.POLB = 1;
-//                        CWG1CON0bits.EN = 1;
-//                    }
-                    PR2 = PR_val[freq_index]; //load freq
-                    state = 0;//state flipped to 0 again
-                    return;
-                }
-            }
+            uart_recv_flag = 1;
         }
         else if(CCP1IF){
-            //PWM
-            //T2CON = 0b00000110;// Timer 2 PS1/64 setting
-            //PR2 = PR_val[freq_index]; //load freq
-            // Update Duty Cycle
             CCP1IF = 0; //clear flag
             TMR2IF = 0;
             index = index + 1;
             if(index == 200)
                 index = 0;
-            /*
-            if(duty_cycle != 0){
-                if((index == 0) || (index == 100)){
-                    CWG1CON0bits.EN = 0;
-                    CWG1CON1bits.POLB= 0;
-                    CWG1CON0bits.EN = 1;
-                }
-                else if(index == duty_cycle || index == (duty_cycle + 100)){
-                    CWG1CON0bits.EN = 0;
-                    CWG1CON1bits.POLB = 1;
-                    CWG1CON0bits.EN = 1;
-                }
-                if(index < duty_cycle)
-                {
-                    CCPR1H = (PR_val[freq_index]);
-                    CCPR1L= 0x00;
-                }
-                else{
-                    CCPR1H = 0x00;
-                    CCPR1L= 64;
-                }
-            }
-            */
-            if(index == duty_cycle || index == (duty_cycle + 100)){
-                CWG1CON0bits.EN = 0;
-                CWG1CON1bits.POLB = 1;
-                CWG1CON0bits.EN = 1;
-            }
-            else if((index == 0) || (index == 100)){
-                CWG1CON0bits.EN = 0;
-                CWG1CON1bits.POLB= 0;
-                CWG1CON0bits.EN = 1;
-            }
-            if(index < duty_cycle)
-            {
-                CCPR1H = (PR_val[freq_index]);
-                CCPR1L= 0x00;
-            }
-            else{
-                CCPR1H = 0x00;
-                CCPR1L= 64;
-            }
+            ccp_flag = 1;
         }
     
 }
@@ -272,27 +267,18 @@ int main(int argc, char** argv) {
    
     // Infinite loop
     while(1) {
-        if (color != duty_index){
-            color = duty_index;
-            sendColor_SPI(color*16, 0, 0);
+        if (uart_recv_flag) {
+            UART_processing();
+            uart_recv_flag = 0;
+            // also check if the color needs to be updated
+            if (color != duty_index){
+                color = duty_index;
+                sendColor_SPI(color*16, 0, 0);
+            }
         }
-         __delay_ms(1);
-        // Example: Set LED to Green
-//        sendColor_SPI(0x1F, 0x00, 0x00); // G=0xFF, R=0, B=0
-//        __delay_ms(1000);
-//        
-//        // Red
-//        sendColor_SPI(0x00, 0x1F, 0x00);
-//        __delay_ms(1000);
-//
-//        // Blue
-//        sendColor_SPI(0x00, 0x00, 0x1F);
-//        __delay_ms(1000);
-//
-//        // Off
-//        sendColor_SPI(0x00, 0x00, 0x00);
-//        __delay_ms(1000);
-//        CLRWDT();
+        if(ccp_flag){
+            CCP_processing();
+            ccp_flag = 0;
+        }
     }
-    
 }
