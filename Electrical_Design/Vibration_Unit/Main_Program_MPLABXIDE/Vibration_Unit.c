@@ -50,7 +50,7 @@
 
 uint8_t buffer = 0;//uart recv buffer
 
-uint8_t duty_index = 7; // 0-15 maps to PWM duty cycle 0-100%;
+uint8_t duty_index = 0; // 0-15 maps to PWM duty cycle 0-100%;
 uint8_t duty_cycle_array[] = {0,1,2,3,5,6,9,12,16,21,27,35,46,59,77,99};
 uint8_t duty_cycle = 0;
 uint8_t freq_index = 3; // 0-7 maps to frequency {123, 145, 170, 200, 235, 275, 322, 384} Hz;
@@ -174,7 +174,7 @@ void __interrupt() ISR(void) {
                         TRISA0 = 1;
                         TRISA1 = 1;
                         duty_index = 0;
-                        duty_cycle = duty_cycle_array[duty_index];
+//                        duty_cycle = duty_cycle_array[duty_index];
                     }
                     return;
                 }
@@ -190,16 +190,15 @@ void __interrupt() ISR(void) {
                 else{ //data byte addressed to this board
                     TRISA1 = 0;
                     TRISA0 = 0;
-                    TMR2ON = 1;
                     T2CON = 0b00000101;
                     freq_index = (buffer & 0b111);
                     duty_index = (buffer & 0b1111000) >> 3;
                     duty_cycle = duty_cycle_array[duty_index];
-                    if(duty_cycle == 0){
-                        CWG1CON0bits.EN = 0;
-                        CWG1CON1bits.POLB = 1;
-                        CWG1CON0bits.EN = 1;
-                    }
+//                    if(duty_cycle == 0){
+//                        CWG1CON0bits.EN = 0;
+//                        CWG1CON1bits.POLB = 1;
+//                        CWG1CON0bits.EN = 1;
+//                    }
                     PR2 = PR_val[freq_index]; //load freq
                     state = 0;//state flipped to 0 again
                     return;
@@ -216,6 +215,7 @@ void __interrupt() ISR(void) {
             index = index + 1;
             if(index == 200)
                 index = 0;
+            /*
             if(duty_cycle != 0){
                 if((index == 0) || (index == 100)){
                     CWG1CON0bits.EN = 0;
@@ -236,6 +236,26 @@ void __interrupt() ISR(void) {
                     CCPR1H = 0x00;
                     CCPR1L= 64;
                 }
+            }
+            */
+            if(index == duty_cycle || index == (duty_cycle + 100)){
+                CWG1CON0bits.EN = 0;
+                CWG1CON1bits.POLB = 1;
+                CWG1CON0bits.EN = 1;
+            }
+            else if((index == 0) || (index == 100)){
+                CWG1CON0bits.EN = 0;
+                CWG1CON1bits.POLB= 0;
+                CWG1CON0bits.EN = 1;
+            }
+            if(index < duty_cycle)
+            {
+                CCPR1H = (PR_val[freq_index]);
+                CCPR1L= 0x00;
+            }
+            else{
+                CCPR1H = 0x00;
+                CCPR1L= 64;
             }
         }
     
