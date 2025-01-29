@@ -245,13 +245,15 @@ void __interrupt() ISR(void) {
             buffer = RC1REG; // Read The Received Data Buffer
             uart_recv_flag = 1;
         }
-        else if(CCP1IF){
-            CCP1IF = 0; //clear flag
+        else if(TMR2IF){
             TMR2IF = 0;
             index = index + 1;
             if(index == 200)
                 index = 0;
             ccp_flag = 1;
+        }
+        else if(CCP1IF){
+            CCP1IF = 0; //clear flag
         }
     
 }
