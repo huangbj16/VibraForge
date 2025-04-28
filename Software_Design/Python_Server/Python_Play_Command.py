@@ -5,7 +5,7 @@ import time
 import argparse
 
 CHARACTERISTIC_UUID = 'f22535de-5375-44bd-8ca9-d0ea9ff9e410'
-CONTROL_UNIT_NAME = 'QT Py ESP32-S3'
+CONTROL_UNIT_NAME = 'QT Py ESP32-S3 BJ'
 COMMAND_FILENAME = 'command.json'
 
 def create_command(addr, mode, duty, freq):
