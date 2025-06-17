@@ -38,7 +38,7 @@ class signal_segmentation_api:
 
     def signal_segmentation(self, product_signal, sampling_rate, downsample_rate, threshold=102):
         # Perform STFT on the signal to get the high-frequency components
-        frequencies, times, Zxx = stft(product_signal, fs=sampling_rate, nperseg=2*int(sampling_rate/downsample_rate))
+        frequencies, times, Zxx = stft(product_signal, fs=sampling_rate, nperseg=int(20*sampling_rate/downsample_rate), noverlap=int(19*sampling_rate/downsample_rate))
         max_freq = np.argmax(np.abs(Zxx), axis=0)
         high_freq_signal = frequencies[max_freq][:-1]
 
