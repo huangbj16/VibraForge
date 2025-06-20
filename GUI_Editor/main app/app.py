@@ -233,6 +233,7 @@ class HapticCommandManager:
         }  # 1 for start
 
     def process_commands(self, commands):
+        commands.sort(key=lambda cmd: cmd["addr"])
         if commands != None and self.is_playing:
             self.ble_api.send_command_list(commands)  # Send the list of commands
             self.last_sent_commands = commands  # Log the last sent commands
@@ -248,6 +249,8 @@ class HapticCommandManager:
             {"addr": self.actuator_id_to_addr(actuator_id), "duty": 0, "freq": 0, "start_or_stop": 0}
             for actuator_id in self.active_actuators
         ]
+        # sort the stop_commands by addr in a increasing order
+        stop_commands.sort(key=lambda cmd: cmd["addr"])
         
         # Send STOP commands to the actuators
         if stop_commands:
