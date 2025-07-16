@@ -154,7 +154,7 @@ void setup() {
   strip.show();
 
   //BLE setup
-  BLEDevice::init("QT Py ESP32-S3");
+  BLEDevice::init("QT Py ESP32-S3 #4");
   BLEServer *pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
   BLEDevice::setMTU(128);
