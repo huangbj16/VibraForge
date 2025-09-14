@@ -18,13 +18,15 @@ bool deviceConnected = false;
 
 Adafruit_NeoPixel strip(1, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 
-const int subchain_pins[4] = {18, 17, 9, 8};
-const int subchain_num = 4;
+const int subchain_pins[2] = {18, 9};
+const int subchain_recv_pins[2] = {17, 8};
+const int subchain_num = 2;
+const int subchain_recv_num = 2;
 uint32_t colors[5];
 int color_num = 5;
 int global_counter = 0;
 
-EspSoftwareSerial::UART serial_group[4];
+EspSoftwareSerial::UART serial_group[2];
 
 class MyCharacteristicCallbacks: public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *pCharacteristic) {
@@ -122,6 +124,53 @@ class MyServerCallbacks: public BLEServerCallbacks {
     }
 };
 
+void receiveHandler() {
+  while (serial_group[0].available()) {
+    uint8_t data = serial_group[0].read();
+    Serial.print("receive data: ");
+    for (int i = 7; i >= 0; --i) {
+      Serial.print((data >> i) & 0x01);
+    }
+    Serial.println();
+    // printReceivedData(data, 1);
+  }
+}
+
+void printReceivedData(uint8_t* data, size_t length) {
+  if (length == 2) {
+    uint8_t byte0 = data[0];
+    uint8_t byte1 = data[1];
+    Serial.print("byte0 bit ");
+    for (int i = 7; i >= 0; --i) {
+      Serial.print((byte0 >> i) & 0x01);
+    }
+    Serial.println();
+    Serial.print("byte1 bit ");
+    for (int i = 7; i >= 0; --i) {
+      Serial.print((byte1 >> i) & 0x01);
+    }
+    Serial.println();
+    
+
+    // int motor_addr = (byte0 >> 1) & 0x3F; // 6 bits for motor_addr
+    // int is_start = byte0 & 0x01;
+
+    // int duty = (byte1 >> 3) & 0x0F; // 4 bits for duty
+    // int freq = (byte1 >> 1) & 0x03; // 2 bits for freq
+    // int wave = byte1 & 0x01;        // 1 bit for wave
+
+    // Serial.print("Decoded command: motor_addr=");
+    // Serial.print(motor_addr);
+    // Serial.print(", is_start=");
+    // Serial.print(is_start);
+    // Serial.print(", duty=");
+    // Serial.print(duty);
+    // Serial.print(", freq=");
+    // Serial.print(freq);
+    // Serial.print(", wave=");
+    // Serial.println(wave);
+  }
+}
 
 void setup() {
   Serial.begin(500000);//even parity check
@@ -133,8 +182,9 @@ void setup() {
   for (int i = 0; i < subchain_num; ++i) {
     Serial.print("initialize uart on ");
     Serial.println(subchain_pins[i]);
-    serial_group[i].begin(115200, SWSERIAL_8E1, -1, subchain_pins[i], false);
+    serial_group[i].begin(115200, SWSERIAL_8E1, subchain_recv_pins[i], subchain_pins[i], false);
     serial_group[i].enableIntTx(false);
+    serial_group[i].onReceive(receiveHandler);
     if (!serial_group[i]) { // If the object did not initialize, then its configuration is invalid
       Serial.println("Invalid EspSoftwareSerial pin configuration, check config");
     }
@@ -154,7 +204,7 @@ void setup() {
   strip.show();
 
   //BLE setup
-  BLEDevice::init("QT Py ESP32-S3 #4");
+  BLEDevice::init("QT Py ESP32-S3 Control Unit");
   BLEServer *pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
   BLEDevice::setMTU(128);

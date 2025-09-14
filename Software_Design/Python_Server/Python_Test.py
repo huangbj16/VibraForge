@@ -62,7 +62,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-name", "--control_unit_name", required=False, type=str, 
-        default="QT Py ESP32-S3",
+        default="QT Py ESP32-S3 Control Unit",
         help="The Bluetooth name of the control unit"
     )
 
