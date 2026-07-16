@@ -1,0 +1,22 @@
+Item,# needed for a dev kit,Link
+Packaging,,
+fold box,1,https://www.amazon.ca/dp/B08G8CLKNH?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_1
+3D print holder,1,https://www.amazon.ca/dp/B0FD1LFGZT (matte PLA filament)
+sleeves,1,https://www.amazon.ca/dp/B0DGQ37KB7?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1
+rubber band,1,random
+user manual,1,paper print
+Control Unit,,
+3D print enclosure,1,https://www.amazon.ca/dp/B0FGD7DJ4K (transparent PLA filament)
+3D print cap,1,https://www.amazon.ca/dp/B0FGD7DJ4K (transparent PLA filament)
+Controller PCB (v2.0),1,https://jlcpcb.com/ (order as assembled PCBA)
+Adafruit QT Py ESP32-S3,1,https://www.adafruit.com/product/5426
+Vibration Unit,,
+LRA actuators,10,https://www.digikey.com/en/products/detail/jie-yi-electronics-limited/JYLRA9595X/22519430 (or Jinlong Machinery; bulk: contact author)
+vibration PCB,10,https://jlcpcb.com/ (order as assembled PCBA)
+3D print mount,10,https://www.amazon.ca/dp/B0FGD7DJ4K (transparent PLA filament)
+cap,10,https://www.amazon.ca/dp/B0FGD7DJ4K (transparent PLA filament)
+enclosure,10,https://www.amazon.ca/dp/B0FGD7DJ4K (transparent PLA filament)
+ring,10,https://www.amazon.ca/dp/B0FGD7DJ4K (transparent PLA filament)
+STEMMA QT / Qwiic JST SH 4-pin Cable - 100mm Long,40,https://www.adafruit.com/product/4210
+MISC,,
+PicKit5 programmer,1,https://www.digikey.com/en/products/detail/microchip-technology/PG164150/19915398
