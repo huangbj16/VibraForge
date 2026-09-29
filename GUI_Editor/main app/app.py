@@ -215,8 +215,8 @@ class HapticCommandManager:
 
 
     def map_frequency_to_freq_param(self, frequency):
-        # Define the frequency set
-        frequency_set = [123, 145, 170, 200, 235, 275, 322, 384]
+        # Define the frequency set (must match PR_val in Vibration_Unit.c)
+        frequency_set = [116, 137, 164, 189, 222, 263, 303, 357]
         
         # Find the closest frequency in the set
         closest_freq = min(frequency_set, key=lambda x: abs(x - frequency))

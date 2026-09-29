@@ -55,10 +55,10 @@
  uint8_t duty_index = 0; // 0-15 maps to PWM duty cycle 0-100%;
  uint8_t duty_cycle_array[] = {0,1,2,3,5,6,9,12,16,21,27,35,46,59,77,99};
  uint8_t duty_cycle = 0;
- uint8_t freq_index = 3; // 0-7 maps to frequency {123, 145, 170, 200, 235, 275, 322, 384} Hz;
+ uint8_t freq_index = 3; // 0-7 maps to frequency {116, 137, 164, 189, 222, 263, 303, 357} Hz;
  
  //uint8_t PR_val[] = {127, 107, 91, 78, 66, 56, 48, 40}; // PR2 values for frequencies;
- uint8_t PR_val[] = {85, 72, 60, 52, 44, 37, 32, 27}; // PR2 values for frequencies;
+ uint8_t PR_val[] = {85, 72, 60, 52, 44, 37, 32, 27}; // PR2 values for frequencies; f = 32 MHz / (4 * 4 * (PR2 + 1) * 200 steps)
  
  uint8_t ccp_flag = 0;
  uint8_t cwg_flag = 0;
