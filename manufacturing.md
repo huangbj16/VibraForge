@@ -28,7 +28,7 @@ flowchart LR
         direction LR
         C1[/"Order Controller PCB v2.0 · JLCPCB<br/>assembled PCBA · ~7 business days<br/>⏱ ORDER EARLY"/]:::buy
         C2[/"Buy QT Py ESP32-S3<br/>Adafruit / DigiKey"/]:::buy
-        C3["3D-print enclosure + cap<br/>100% infill · 0.2 mm layer"]:::print
+        C3["3D-print battery-free<br/>enclosure + cap<br/>100% infill · 0.2 mm layer"]:::print
         C4["Program ESP32<br/>Arduino IDE"]:::program
         C2 --> C4
         C4 --> C5["Mount ESP32 on PCB"]:::assemble
@@ -127,8 +127,8 @@ flowchart LR
 |------|-----|--------|
 | Controller PCB v2.0 (assembled) | 1 | JLCPCB (PCBA) |
 | Adafruit QT Py ESP32-S3 | 1 | [Adafruit #5426](https://www.adafruit.com/product/5426) / DigiKey |
-| 3D-print enclosure | 1 | Print in-house |
-| 3D-print cap | 1 | Print in-house |
+| 3D-print enclosure (battery-free) | 1 | Print in-house |
+| 3D-print cap (battery-free) | 1 | Print in-house |
 
 ### Vibration Unit (×10)
 | Item | Qty | Source |
@@ -167,7 +167,7 @@ All three sub-assemblies are independent — packaging can be prepared any time.
 
 1. **Order the Controller PCB v2.0** from [JLCPCB](https://jlcpcb.com/) as an **assembled PCBA** — upload the Gerber, BOM, and CPL from [Small_Unit/](Electrical_Design/Control_Unit/Small_Unit/) so JLCPCB places all components. **Lead time ~7 business days — order this first.**
 2. **Buy the Adafruit QT Py ESP32-S3** ([#5426](https://www.adafruit.com/product/5426), Adafruit or DigiKey).
-3. **3D-print** the control-unit enclosure and cap — normal settings with **100% infill** and a regular **0.2mm layer height** (files in [Control_Unit_Small/](Mechanical_Design/Control_Unit_Small/)).
+3. **3D-print** the **battery-free** control-unit enclosure and cap — [Enclosure_Battery_Free.stl](Mechanical_Design/Control_Unit_Small/Enclosure_Battery_Free.stl) and [Cap_Battery_Free.stl](Mechanical_Design/Control_Unit_Small/Cap_Battery_Free.stl) — normal settings with **100% infill** and a regular **0.2mm layer height**. The unit is powered over USB. The folder also contains the older `*_with_Battery` variant, which the dev kit does not use (see the [Mechanical Design readme](Mechanical_Design/readme.md)).
 4. **Program the ESP32 with Arduino IDE** (see §3.2.1).
 5. **Assemble:** mount the programmed ESP32 onto the controller PCB, then fit the PCB into the enclosure and close with the cap.
 6. **Orientation matters:** the four chain connectors must be installed in the correct order and the **USB port must face left** — see [Figures/control_unit.png](Figures/control_unit.png). Reversing a connector can short the ESP32.
@@ -234,7 +234,7 @@ Once verified, the kit can be driven with the [GUI Editor](GUI_Editor/), the [Un
 
 **Control Unit**
 - [ ] QT Py ESP32-S3 purchased
-- [ ] Enclosure + cap printed (100% infill, 0.2mm)
+- [ ] Battery-free enclosure + cap printed (100% infill, 0.2mm)
 - [ ] ESP32 flashed with Arduino firmware
 - [ ] Assembled (USB faces left, connector order verified)
 
