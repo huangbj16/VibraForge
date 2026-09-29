@@ -96,9 +96,9 @@ For details on each program, see the [Software_Design](Software_Design/) and [GU
 
 - **Addressing.** Unit addresses start at **0** and are unique per chain position. Up to 16 units per chain: chain 1 → `0–15`, chain 2 → `16–31`, and so on.
 - **Orientation matters.** With the programming pins on top, the **input is on the left** and the **output is on the right**. Do not reverse the order, or the driver board may be damaged by a short.
-- **Status LEDs.** Each driver PCB has two LEDs: the first indicates the board is correctly powered; the second lights when the board receives a "Start" command and should be vibrating. These are useful for checking MCU status while debugging.
+- **Status LED.** Each driver PCB has one RGB status LED (NeoPixel). It stays off while the unit is idle, lights up when the unit receives a "Start" command and should be vibrating, with the color indicating the intensity level, and turns off again on "Stop". It does not indicate power on its own. This is useful for checking MCU status while debugging.
 
-<p align="center"><img src="Figures/vibration_unit.png" alt="Vibration unit orientation and status LEDs" width="800"></p>
+<p align="center"><img src="Figures/vibration_unit.png" alt="Vibration unit chain addressing and orientation" width="800"></p>
 
 ## Getting a Dev Kit
 

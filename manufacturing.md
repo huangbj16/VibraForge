@@ -146,7 +146,9 @@ flowchart LR
 |------|-----|--------|
 | MPLAB PICkit 5 programmer | 1 | [DigiKey PG164150](https://www.digikey.com/en/products/detail/microchip-technology/PG164150/19915398) |
 
-> Both PCBs are ordered **fully assembled (PCBA)** from JLCPCB, so no hand-soldering of SMT components is required. For the Small Control Unit, the orderable BOM and placement files are provided: [Board_Small_Unit_BOM.csv](Electrical_Design/Control_Unit/Small_Unit/Board_Small_Unit_BOM.csv), [Board_Small_Unit_CPL.csv](Electrical_Design/Control_Unit/Small_Unit/Board_Small_Unit_CPL.csv).
+> Both PCBs are ordered **fully assembled (PCBA)** from JLCPCB, so no hand-soldering of SMT components is required. The orderable BOM and placement files are provided for both boards:
+> - Small Control Unit: [Board_Small_Unit_BOM.csv](Electrical_Design/Control_Unit/Small_Unit/Board_Small_Unit_BOM.csv), [Board_Small_Unit_CPL.csv](Electrical_Design/Control_Unit/Small_Unit/Board_Small_Unit_CPL.csv)
+> - LRA Vibration Unit: [Board_LRA_BOM.csv](Electrical_Design/Vibration_Unit/Board_LRA/Board_LRA_BOM.csv), [Board_LRA_CPL.csv](Electrical_Design/Vibration_Unit/Board_LRA/Board_LRA_CPL.csv)
 
 ---
 
@@ -184,24 +186,24 @@ All three sub-assemblies are independent — packaging can be prepared any time.
 ### 3.3 Vibration Units (×10)
 
 1. **Source the LRA-X actuators** (10×) from **Jinlong Machinery**, or buy from [DigiKey (JYLRA9595X)](https://www.digikey.com/en/products/detail/jie-yi-electronics-limited/JYLRA9595X/22519430). For bulk orders, contact the author.
-2. **Order the Vibration PCBs** (10×) from JLCPCB as **assembled PCBA** — upload the Gerber from [Board_LRA/](Electrical_Design/Vibration_Unit/Board_LRA/). **Lead time ~7 business days — order early.**
+2. **Order the Vibration PCBs** (10×) from JLCPCB as **assembled PCBA** — upload the Gerber, BOM, and CPL from [Board_LRA/](Electrical_Design/Vibration_Unit/Board_LRA/). **Lead time ~7 business days — order early.**
 3. **Buy the JST cables:** STEMMA QT / Qwiic JST SH 4-pin, 100mm (40× — [Adafruit #4210](https://www.adafruit.com/product/4210) or DigiKey). These form the chain links.
 4. **3D-print** all four parts — mount, cap, enclosure, ring (10× each) — normal settings with **100% infill** and **0.12mm layer height** (files in [Vibration_Unit_LRAX/](Mechanical_Design/Vibration_Unit_LRAX/)).
 5. **Program each PIC16F18313 MCU** with the PICkit 5 (§3.3.1). The same firmware is flashed to every unit — no per-unit address to set.
 6. **Assemble — no soldering required!** The LRA-X actuator makes contact with the PCB via **pogo pins**. Seat the actuator, PCB, mount, and ring into the enclosure and close with the cap; the ring/mount hold the actuator against the pogo-pin contacts.
 7. **Orientation matters:** with the programming pins on top, **input is on the left, output on the right**. Do not reverse — the driver board can be damaged by a short. See [Figures/vibration_unit.png](Figures/vibration_unit.png).
-8. **Status LEDs (debug aid):** LED 1 = board powered; LED 2 = board received a "Start" command and should be vibrating.
+8. **Status LED (debug aid):** each board has one RGB NeoPixel. It is off while idle and lights up when the board receives a "Start" command and should be vibrating, with the color indicating the intensity level. It does not indicate power on its own.
 
 #### 3.3.1 Vibration Unit Firmware (PICkit 5)
 
-The **same firmware** runs on every vibration unit: [Vibration_Unit.c](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/Vibration_Unit.c) (PIC16F18313, 32 MHz HFINTOSC, watchdog enabled). There is **no per-unit address to program** — a unit's address is determined automatically by its position in the chain at runtime (chain 1 → 0–15, chain 2 → 16–31, etc.).
+The **same firmware** runs on every vibration unit: [Vibration_Unit.c](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/Vibration_Unit.c) plus the NeoPixel driver [neopixel_control.c](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/neopixel_control.c) / [neopixel_control.h](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/neopixel_control.h) (PIC16F18313, 32 MHz HFINTOSC). There is **no per-unit address to program** — a unit's address is determined automatically by its position in the chain at runtime (chain 1 → 0–15, chain 2 → 16–31, etc.).
 
 1. Install [MPLAB X IDE](https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide) and connect the [PICkit 5](https://www.digikey.com/en/products/detail/microchip-technology/PG164150/19915398).
 2. Connect the PICkit 5 programming wires to the header on the **top** of the vibration PCB as shown below:
 
    <img src="Figures/PIC_programming_wire_connections.jpg" alt="PICkit 5 to vibration unit programming wire connections" width="600">
 
-3. Import the project and flash the firmware to each of the 10 boards. Every board gets the identical program.
+3. Create an MPLAB X project for the PIC16F18313 with the XC8 compiler and add `Vibration_Unit.c`, `neopixel_control.c`, and `neopixel_control.h` (not the standalone programs in `tests/`). Build and flash the firmware to each of the 10 boards. Every board gets the identical program.
 
 ### 3.4 Chain Wiring & Bring-up Test
 
@@ -212,7 +214,7 @@ The **same firmware** runs on every vibration unit: [Vibration_Unit.c](Electrica
    ```bash
    python Python_Test.py -uuid f22535de-5375-44bd-8ca9-d0ea9ff9e410 -name "QT Py ESP32-S3"
    ```
-5. Send a command to a known address and confirm the target unit's LED 2 lights and it vibrates.
+5. Send a command to a known address and confirm the target unit's NeoPixel lights up and it vibrates.
 
 ### 3.5 Final Kit Assembly
 

@@ -8,7 +8,7 @@ Arduino Library Rrquirements:
 - [Arduino ESP32 support](https://github.com/espressif/arduino-esp32)
 - [SoftwareSerial for ESP32](https://github.com/plerup/espsoftwareserial)
 
-Vibration units include LRA and VCA, all using the PIC16F18313 8-pin microcontroller. The main program is the same across all vibration units. To program / reprogram the MCU, you need to download the [MPLAB X IDE](https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide) and buy the  [MPLAB® PICkit™ 5 In-Circuit Debugger](https://www.microchip.com/en-us/development-tool/pg164150). import the main program into the IDE, connect the programming pins from the debugger to the top of the PCB board, following this [quickstart guideline](https://ww1.microchip.com/downloads/aemDocuments/documents/DEV/ProductDocuments/Brochures/MPLAB-PICkit-5-In-Circuit-Debugger-Quick-Start-Guide-50003478.pdf).
+Vibration units include LRA and VCA, all using the PIC16F18313 8-pin microcontroller. The main program is the same across all vibration units. To program / reprogram the MCU, you need to download the [MPLAB X IDE](https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide) and buy the  [MPLAB® PICkit™ 5 In-Circuit Debugger](https://www.microchip.com/en-us/development-tool/pg164150). add the main program (`Vibration_Unit.c`) and the NeoPixel driver (`neopixel_control.c`, `neopixel_control.h`) to an MPLAB X project, connect the programming pins from the debugger to the top of the PCB board, following this [quickstart guideline](https://ww1.microchip.com/downloads/aemDocuments/documents/DEV/ProductDocuments/Brochures/MPLAB-PICkit-5-In-Circuit-Debugger-Quick-Start-Guide-50003478.pdf).
 
 - Control_Unit
   - Large_Unit
@@ -20,6 +20,7 @@ Vibration units include LRA and VCA, all using the PIC16F18313 8-pin microcontro
   - Board_LRA
   - Board_VCA
   - Main_Program_MPLABXIDE
+    - tests
   - Schematic
 
 
