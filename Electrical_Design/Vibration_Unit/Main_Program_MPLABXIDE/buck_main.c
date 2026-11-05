@@ -65,6 +65,8 @@ static inline void set_pwm10_isr(uint16_t dc10){
 }
 
 #define COAST_MACRO() { RA1PPS=0; LATAbits.LATA1=0; RA0PPS=0; LATAbits.LATA0=0; }
+// DRV8837: IN1=IN2=0 coasts (OUT1/OUT2 float and pick up mains hum), IN1=IN2=1 brakes (both outputs driven low)
+#define BRAKE_MACRO() { LATAbits.LATA1=1; LATAbits.LATA0=1; RA1PPS=0; RA0PPS=0; }
 
 // ==================== TABLES SINE ====================
 #define SINE_LEN 64u
@@ -152,7 +154,7 @@ static void UART_processing(void){
         }else{
             if (!start){
                 T1CONbits.TMR1ON = 0; PIE1bits.TMR1IE = 0;
-                COAST_MACRO(); set_pwm10_isr(0);
+                BRAKE_MACRO(); set_pwm10_isr(0);
                 T2CONbits.TMR2ON = 0; TMR2IE = 0; CWG1CON0bits.EN = 0; 
                 duty_pct = 0; cwg_flag = 0; duty_flag = 0; square_tick = 0;
                 duty5_raw = 0;        // Reset duty for LED
@@ -262,7 +264,7 @@ int main(void){
     T2CON = 0; TMR2 = 0; PR2 = 199; T2CONbits.TMR2ON = 1;
     CWG1CLKCON = 1; CWG1DAT = 3; CWG1CON1 = 0; CWG1AS0 = 0x78; CWG1DBR=0; CWG1DBF=0;
     CWG1CON0 = 0x44; CWG1CON0bits.EN = 0; 
-    COAST_MACRO();
+    BRAKE_MACRO();
     
     SPI_Init();
 
