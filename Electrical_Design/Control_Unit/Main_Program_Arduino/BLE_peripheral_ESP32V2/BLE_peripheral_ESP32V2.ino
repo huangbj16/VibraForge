@@ -2,7 +2,6 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <BLEClient.h>
-#include <ArduinoJson.h>
 #include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
 

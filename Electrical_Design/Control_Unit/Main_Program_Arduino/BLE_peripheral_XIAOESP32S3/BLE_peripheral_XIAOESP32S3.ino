@@ -2,7 +2,6 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <BLEClient.h>
-#include <ArduinoJson.h>
 #include <SoftwareSerial.h>
 
 // See the following for generating UUIDs:

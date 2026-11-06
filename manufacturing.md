@@ -174,14 +174,14 @@ All three sub-assemblies are independent — packaging can be prepared any time.
 
 #### 3.2.1 Control Unit Firmware (Arduino)
 
-1. Install the [Arduino ESP32 core](https://github.com/espressif/arduino-esp32) and the [ESP32 SoftwareSerial](https://github.com/plerup/espsoftwareserial) library. The sketch also uses `ArduinoJson` and `Adafruit_NeoPixel`.
+1. Install the [Arduino ESP32 core](https://github.com/espressif/arduino-esp32) **version 3.2.1 or earlier** and the [ESP32 SoftwareSerial](https://github.com/plerup/espsoftwareserial) library (`EspSoftwareSerial` in the Library Manager). The sketch also uses `Adafruit_NeoPixel`. From core 3.3.0 on, the ESP32-S3 uses the NimBLE Bluetooth stack and the sketch's Bluedroid connection callback no longer compiles, so don't accept Boards Manager updates past 3.2.1. Tested with core 3.2.1, EspSoftwareSerial 8.1.0 and Adafruit NeoPixel 1.15.5.
 2. Open [BLE_peripheral_QTPyS3.ino](Electrical_Design/Control_Unit/Main_Program_Arduino/BLE_peripheral_QTPyS3/BLE_peripheral_QTPyS3.ino).
 3. Note the BLE identifiers — these must match your host software:
    - `SERVICE_UUID = f10016f6-542b-460a-ac8b-bbb0b2010599`
    - `CHARACTERISTIC_UUID = f22535de-5375-44bd-8ca9-d0ea9ff9e410`
    - Device name: `QT Py ESP32-S3`
 4. The four chains are driven on `subchain_pins = {18, 17, 9, 8}`.
-5. Select the QT Py ESP32-S3 board and upload over USB. If it misbehaves, [factory-reset the board](https://learn.adafruit.com/adafruit-qt-py-esp32-s3/factory-reset).
+5. Select the **Adafruit QT Py ESP32-S3 No PSRAM** board (#5426 has 8 MB flash and no PSRAM) and upload over USB. If it misbehaves, [factory-reset the board](https://learn.adafruit.com/adafruit-qt-py-esp32-s3/factory-reset).
 
 ### 3.3 Vibration Units (×10)
 
@@ -196,7 +196,7 @@ All three sub-assemblies are independent — packaging can be prepared any time.
 
 #### 3.3.1 Vibration Unit Firmware (PICkit 5)
 
-The **same firmware** runs on every vibration unit: [Vibration_Unit.c](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/Vibration_Unit.c) plus the NeoPixel driver [neopixel_control.c](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/neopixel_control.c) / [neopixel_control.h](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/neopixel_control.h) (PIC16F18313, 32 MHz HFINTOSC). There is **no per-unit address to program** — a unit's address is determined automatically by its position in the chain at runtime (chain 1 → 0–15, chain 2 → 16–31, etc.).
+The **same firmware** runs on every vibration unit: [Vibration_Unit.c](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/Vibration_Unit.c) plus the NeoPixel driver [neopixel_control.c](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/neopixel_control.c) / [neopixel_control.h](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/neopixel_control.h) (PIC16F18313, 32 MHz HFINTOSC). It drives the actuator with a sine wave (SPWM) at 16 intensity levels and 8 frequencies (123–384 Hz), and brakes it when idle. There is **no per-unit address to program** — a unit's address is determined automatically by its position in the chain at runtime (chain 1 → 0–15, chain 2 → 16–31, etc.).
 
 1. Install [MPLAB X IDE](https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide) and connect the [PICkit 5](https://www.digikey.com/en/products/detail/microchip-technology/PG164150/19915398).
 2. Connect the PICkit 5 programming wires to the header on the **top** of the vibration PCB as shown below:
