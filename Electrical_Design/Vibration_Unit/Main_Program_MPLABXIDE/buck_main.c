@@ -98,11 +98,31 @@ static inline void route_halfcycle(int8_t sign){
     }
 }
 
-static void lra_set_amp(uint8_t pct){
+// CCPR1H/CCPR1L for |sine| at quarter-wave steps 0..16 (SINE64_8 mirrors around steps 16 and 32).
+// main() builds them for each sine command so the Timer1 ISR is a lookup: the 32-bit multiply it
+// used to do per step took ~76 us and capped sine at ~205 Hz.
+static uint8_t sine_h[17], sine_l[17];
+static volatile uint8_t sine_build = 0;   // 1: sine command waiting for tables, 2: main() building them
+
+static void sine_build_tables(void){
+    INTCONbits.GIE = 0; uint8_t pct = duty_pct; sine_build = 2; INTCONbits.GIE = 1;
     if (pct > 100) pct = 100;
     uint32_t top = 799; 
-    scale = (uint16_t)((top * pct + 50) / 100); 
-    if (!scale){ COAST_MACRO(); set_pwm10_isr(0); }
+    uint16_t s = (uint16_t)((top * pct + 50) / 100); 
+    for (uint8_t k = 0; k <= 16; k++){
+        uint16_t d = (uint16_t)(((uint32_t)s * (uint8_t)SINE64_8[k] + 64u) >> 7);
+        if (d >= 799) d = 799;
+        d = 799 - d;
+        sine_h[k] = (uint8_t)(d >> 2);
+        sine_l[k] = (uint8_t)((d & 0x3u) << 6);
+    }
+    INTCONbits.GIE = 0;
+    if (sine_build == 2){   // no stop, square or newer sine command arrived while building
+        scale = s; sine_build = 0;
+        TMR1H = (uint8_t)(t1_reload >> 8); TMR1L = (uint8_t)(t1_reload & 0xFF);
+        PIR1bits.TMR1IF = 0; T1CONbits.TMR1ON = 1;
+    }
+    INTCONbits.GIE = 1;
 }
 
 // ==================== SQUARE ====================
@@ -156,7 +176,7 @@ static void UART_processing(void){
                 T1CONbits.TMR1ON = 0; PIE1bits.TMR1IE = 0;
                 BRAKE_MACRO(); set_pwm10_isr(0);
                 T2CONbits.TMR2ON = 0; TMR2IE = 0; CWG1CON0bits.EN = 0; 
-                duty_pct = 0; cwg_flag = 0; duty_flag = 0; square_tick = 0;
+                duty_pct = 0; cwg_flag = 0; duty_flag = 0; square_tick = 0; sine_build = 0;
                 duty5_raw = 0;        // Reset duty for LED
                 uart_led_flag = 1;    // Trigger LED update (will turn off)
                 state = 0;
@@ -193,13 +213,10 @@ static void UART_processing(void){
                 T1CON = 0; T1CONbits.T1CKPS = 0b11; 
                 PIR1bits.TMR1IF = 0; PIE1bits.TMR1IE = 1;
                 phase_idx = 0; last_sign = 0;
-                lra_set_amp(duty_pct);       
-                
                 t1_reload = T1_RELOAD[freq_index];
-                T1CONbits.TMR1ON = 0; TMR1H=(t1_reload>>8); TMR1L=(t1_reload&0xFF);
-                PIR1bits.TMR1IF = 0; T1CONbits.TMR1ON = 1;
+                sine_build = 1;   // main() builds the tables for duty_pct, then starts Timer1
             }else{ // SQUARE
-                T1CONbits.TMR1ON = 0; PIE1bits.TMR1IE = 0;
+                T1CONbits.TMR1ON = 0; PIE1bits.TMR1IE = 0; sine_build = 0;
                 COAST_MACRO();
                 CCP1CON = 0b10011111;
                 RA1PPS = 0b01000; RA0PPS = 0b01001; 
@@ -233,12 +250,8 @@ void __interrupt() ISR(void){
         if (!scale){ COAST_MACRO(); set_pwm10_isr(0); last_sign = sgn; return; }
         if (sgn != last_sign){ COAST_MACRO(); route_halfcycle(sgn); last_sign = sgn; }
         
-        uint16_t mag = (uint16_t)(s8 >= 0 ? s8 : -s8);
-        uint32_t tmp = (uint32_t)scale * (uint32_t)mag;
-        uint16_t duty_fwd = (uint16_t)((tmp + 64u) >> 7);
-        uint16_t top = 799; 
-        if (duty_fwd >= top) duty_fwd = top;
-        set_pwm10_isr(top - duty_fwd);
+        uint8_t q = i & 31u; if (q > 16u) q = 32u - q;   // |SINE64_8[i]| == SINE64_8[q]
+        CCPR1H = sine_h[q]; CCPR1L = sine_l[q];
     }
     else if (TMR2IF){
         TMR2IF = 0;
@@ -278,6 +291,7 @@ int main(void){
             sendColor_SPI(color[0], color[1], color[2]);
             INTCONbits.GIE = gie;
         }
+        if (sine_build){ sine_build_tables(); }
         if (square_tick){ square_processing(); square_tick = 0; }
     }
     return 0;
