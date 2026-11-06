@@ -3,6 +3,7 @@
  * Author: MasonC
  *
  * Created on November 8, 2022, 10:19 PM
+ * Revised on November 6, 2026 by Bingjian Huang and Darius Giannoli
  *
  * Vibration unit firmware for the PIC16F18313 + DRV8837 board. It drives the actuator with a 64-step
  * sine (SPWM on a 40 kHz carrier) at 16 intensity levels x 8 frequencies (123-384 Hz), and brakes it

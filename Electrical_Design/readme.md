@@ -23,5 +23,9 @@ Vibration units include LRA and VCA, all using the PIC16F18313 8-pin microcontro
     - tests
   - Schematic
 
+## Acknowledgements
+
+Thank you to Darius Giannoli ([darius.giannoli@epfl.ch](mailto:darius.giannoli@epfl.ch)) from the EPFL LIS Lab, who contributed the creative idea and the initial implementation of the sine wave (SPWM) design used by the vibration unit firmware.
+
 
 
