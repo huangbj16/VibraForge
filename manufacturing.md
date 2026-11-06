@@ -196,7 +196,7 @@ All three sub-assemblies are independent — packaging can be prepared any time.
 
 #### 3.3.1 Vibration Unit Firmware (PICkit 5)
 
-The **same firmware** runs on every vibration unit: [Vibration_Unit.c](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/Vibration_Unit.c) plus the NeoPixel driver [neopixel_control.c](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/neopixel_control.c) / [neopixel_control.h](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/neopixel_control.h) (PIC16F18313, 32 MHz HFINTOSC). There is **no per-unit address to program** — a unit's address is determined automatically by its position in the chain at runtime (chain 1 → 0–15, chain 2 → 16–31, etc.).
+The **same firmware** runs on every vibration unit: [Vibration_Unit.c](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/Vibration_Unit.c) plus the NeoPixel driver [neopixel_control.c](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/neopixel_control.c) / [neopixel_control.h](Electrical_Design/Vibration_Unit/Main_Program_MPLABXIDE/neopixel_control.h) (PIC16F18313, 32 MHz HFINTOSC). It drives the actuator with a sine wave (SPWM) at 16 intensity levels and 8 frequencies (123–384 Hz), and brakes it when idle. There is **no per-unit address to program** — a unit's address is determined automatically by its position in the chain at runtime (chain 1 → 0–15, chain 2 → 16–31, etc.).
 
 1. Install [MPLAB X IDE](https://www.microchip.com/en-us/tools-resources/develop/mplab-x-ide) and connect the [PICkit 5](https://www.digikey.com/en/products/detail/microchip-technology/PG164150/19915398).
 2. Connect the PICkit 5 programming wires to the header on the **top** of the vibration PCB as shown below:

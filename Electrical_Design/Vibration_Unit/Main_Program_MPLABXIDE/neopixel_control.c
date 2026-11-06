@@ -69,6 +69,11 @@ void sendColor_SPI(uint8_t g, uint8_t r, uint8_t b)
     // Total 9 bytes to send for 24 bits color
     // G -> 3 bytes, R -> 3 bytes, B -> 3 bytes
     // Wait for SPI idle, then write them out.
+    // An interrupt between bytes (a sine step takes ~20 us) holds the data line low long enough for
+    // the LED to latch a partial color, so mask interrupts for the burst only; the encoding above and
+    // the latch delay below run with interrupts on, keeping the UART from overrunning.
+    uint8_t gie = INTCONbits.GIE;
+    INTCONbits.GIE = 0;
     for(uint8_t i = 0; i < 4; i++)
     {
         SSP1BUF = gEnc[i];
@@ -84,6 +89,7 @@ void sendColor_SPI(uint8_t g, uint8_t r, uint8_t b)
         SSP1BUF = bEnc[i];
         while(!SSP1STATbits.BF);  // Wait
     }
+    INTCONbits.GIE = gie;
 
     // After finishing all bytes, we do a latch/reset by holding line low ~50us.
     // With SPI, usually the line idles at low if CKP=0, so just wait in software:
