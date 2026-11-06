@@ -174,7 +174,7 @@ All three sub-assemblies are independent — packaging can be prepared any time.
 
 #### 3.2.1 Control Unit Firmware (Arduino)
 
-1. Install the [Arduino ESP32 core](https://github.com/espressif/arduino-esp32) and the [ESP32 SoftwareSerial](https://github.com/plerup/espsoftwareserial) library. The sketch also uses `ArduinoJson` and `Adafruit_NeoPixel`.
+1. Install the [Arduino ESP32 core](https://github.com/espressif/arduino-esp32) and the [ESP32 SoftwareSerial](https://github.com/plerup/espsoftwareserial) library. The sketch also uses `Adafruit_NeoPixel`.
 2. Open [BLE_peripheral_QTPyS3.ino](Electrical_Design/Control_Unit/Main_Program_Arduino/BLE_peripheral_QTPyS3/BLE_peripheral_QTPyS3.ino).
 3. Note the BLE identifiers — these must match your host software:
    - `SERVICE_UUID = f10016f6-542b-460a-ac8b-bbb0b2010599`
