@@ -11,7 +11,7 @@ SCAN_TIMEOUT = 10.0
 GROUP = 0       # serial group (subchain) 0-3
 ADDR = 0        # board address on that subchain
 WAVE = 0        # 1 sine, 0 square
-FREQ = 3        # frequency index 0-7
+FREQ = 2        # frequency index 0-7
 SWEEP_TIME = 8.0  # seconds to ramp from duty 0 to 31, no stops in between
 
 '''
